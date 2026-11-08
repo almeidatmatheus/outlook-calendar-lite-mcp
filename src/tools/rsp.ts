@@ -1,6 +1,6 @@
 import type { Tool } from '../mcp.ts';
 import { g } from '../g.ts';
-import { res, st } from '../ids.ts';
+import { res } from '../ids.ts';
 import { who } from '../fmt.ts';
 import { ev, hora, str, ALVO, obj } from '../lib.ts';
 
@@ -29,7 +29,6 @@ const t: Tool = {
   async run(a) {
     const { id } = await alvo(a);
     await g('POST', `/me/events/${id}/${ACAO[a.resposta]}`, { comment: a.comentario ?? '', sendResponse: a.avisar !== false });
-    st().cur = res(a.alvo);
     return 'respondido';
   },
 };

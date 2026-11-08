@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { handler, type Tool, type Info } from './mcp.ts';
-import { newIds, type Ctx } from './ctx.ts';
+import { type Ctx } from './ctx.ts';
 import { DIR, need, rnd, s256, msAuthUrl, msCode, msRefresh, toT, page, AuthNeeded, type T } from './auth.ts';
 
 const E = process.env;
@@ -37,7 +37,7 @@ function ctxOf(uid: string): Ctx {
   let c = ctxs.get(uid);
   if (c) return c;
   c = {
-    ids: newIds(), c: {}, caps: {},
+    c: {}, caps: {},
     async tok(force = false) {
       const u = S.users[uid];
       if (!u) throw new AuthNeeded('conta desconectada; reconecte o conector');

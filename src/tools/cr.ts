@@ -1,6 +1,6 @@
 import type { Tool } from '../mcp.ts';
 import { g } from '../g.ts';
-import { put, st } from '../ids.ts';
+
 import { cell } from '../fmt.ts';
 import { ms, PH, cal, view, hora, REC, recTxt, rec, str, obj, LISTA_EMAILS } from '../lib.ts';
 import { datas, campos, pessoas, recorre, DISP } from './ev.ts';
@@ -9,7 +9,7 @@ import { datas, campos, pessoas, recorre, DISP } from './ev.ts';
 export async function conflitos(ini: string, fim: string, tz: string, ignorar = '') {
   const { es } = await view('/me/calendar', ini, fim, tz, 20);
   const c = es.filter(e => e.id !== ignorar && e.seriesMasterId !== ignorar && !e.isCancelled && e.showAs !== 'free');
-  return c.length ? `\nconflito: ${c.map(e => `${put(e.id)} ${cell(e.subject, 40)} (${hora(e)})`).join('; ')}` : '';
+  return c.length ? `\nconflito: ${c.map(e => `${e.id} ${cell(e.subject, 40)} (${hora(e)})`).join('; ')}` : '';
 }
 
 const t: Tool = {
@@ -41,8 +41,7 @@ const t: Tool = {
   async run(a) {
     const { tz, tzG } = await ms(), d = datas(a, tzG);
     const r = await g('POST', `${await cal(a.calendario)}/events`, { ...campos(a), subject: a.titulo, start: d.start, end: d.end, isAllDay: d.isAllDay, attendees: pessoas(a), ...recorre(a, d.ini) }, await PH());
-    st().cur = r.id;
-    return `criado:${put(r.id)}|${hora(r)}${r.onlineMeeting?.joinUrl ? `\nonline:${r.onlineMeeting.joinUrl}` : ''}${await conflitos(d.ini, d.fim, tz, r.id)}`;
+    return `criado:${r.id}|${hora(r)}${r.onlineMeeting?.joinUrl ? `\nonline:${r.onlineMeeting.joinUrl}` : ''}${await conflitos(d.ini, d.fim, tz, r.id)}`;
   },
 };
 

@@ -12,4 +12,4 @@ import cx from './cx.ts';
 // ordem = ordem em tools/list
 export const tools: Tool[] = [ls, rd, find, free, cr, ed, rm, rsp, cx];
 
-export const INSTR = "Calendário Microsoft (Outlook). Horários sempre no fuso do usuário (ls e cx mostram o fuso e a data/hora de agora); escreva datas como AAAA-MM-DDTHH:mm. Saída tabular separada por '|'. Eventos têm id curto ('3'); 'atual' = último evento lido ou criado; 'ultimo' = 1º da última listagem. Antes de marcar com outras pessoas, use free. cr/ed com participantes, rm e rsp enviam aviso a outras pessoas e pedem confirmação do usuário.";
+export const INSTR = "Calendário Microsoft (Outlook). Horários sempre no fuso do usuário (ls e cx mostram o fuso e a data/hora de agora); escreva datas como AAAA-MM-DDTHH:mm. Saída tabular separada por '|'. Cada evento tem um id permanente (coluna id de ls/find): passe esse id para as outras ferramentas; ele pode ser guardado para usar depois. Antes de marcar com outras pessoas, use free. cr/ed com participantes, rm e rsp enviam aviso a outras pessoas e pedem confirmação do usuário.";

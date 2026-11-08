@@ -1,6 +1,6 @@
 import type { Tool } from '../mcp.ts';
 import { g } from '../g.ts';
-import { res, st } from '../ids.ts';
+import { res } from '../ids.ts';
 import { ms, PH, ev, hora, rcp, att, str, ALVO, obj, LISTA_EMAILS } from '../lib.ts';
 import { datas, campos, DISP } from './ev.ts';
 import { conflitos } from './cr.ts';
@@ -54,7 +54,6 @@ const t: Tool = {
   async run(a) {
     const { id, p, d, tz } = await plano(a);
     const r = await g('PATCH', `/me/events/${id}`, p, await PH());
-    st().cur = res(a.alvo);
     return `alterado|${hora(r)}${d ? await conflitos(d.ini, d.fim, tz, id) : ''}`;
   },
 };

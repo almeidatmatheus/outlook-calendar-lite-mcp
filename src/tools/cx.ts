@@ -13,8 +13,7 @@ const t: Tool = {
     if (a?.acao === 'trocar') {
       const C = cx();
       if (!C.reset) return 'neste modo, troque a conta desconectando e reconectando o conector no app';
-      C.c = {}; Object.assign(C.ids, { s2g: new Map(), g2s: new Map(), n: 0, cur: '', last: [] });
-      return C.reset();
+      C.c = {}; return C.reset();
     }
     const [m, w, c] = await Promise.all([me(), ms(), g('GET', '/me/calendars?$select=name,canEdit,isDefaultCalendar,owner&$top=100')]);
     return `conta:${m.mail}\nfuso:${w.tz}|agora:${dia(agora(w.tz))} ${agora(w.tz).slice(11)}\ntrabalho:${w.dias.map(x => x.slice(0, 3)).join(',')} ${w.ini}-${w.fim}\n`

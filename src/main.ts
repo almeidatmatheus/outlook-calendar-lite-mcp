@@ -2,13 +2,13 @@
 import { stdio, type Info } from './mcp.ts';
 import { tools, INSTR } from './tools/index.ts';
 import { login, logout, tok, relogin, hasLocal, startLogin, CID } from './auth.ts';
-import { newIds, setDef, type Ctx } from './ctx.ts';
+import { setDef, type Ctx } from './ctx.ts';
 import { g } from './g.ts';
 
 const E = process.env;
 const info: Info = { name: 'outlook-calendar-lite-mcp', version: '1.0.0', instructions: INSTR };
 const c = process.argv[2];
-const local: Ctx = { tok, ids: newIds(), c: {}, caps: {}, reset: relogin };
+const local: Ctx = { tok, c: {}, caps: {}, reset: relogin };
 setDef(local);
 
 if (c === 'login') await login();

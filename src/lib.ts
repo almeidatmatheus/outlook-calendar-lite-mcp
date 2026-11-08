@@ -1,6 +1,6 @@
 import type { S } from './mcp.ts';
 import { g } from './g.ts';
-import { put, st } from './ids.ts';
+
 import { cx } from './ctx.ts';
 import { cell, tsv, nm } from './fmt.ts';
 
@@ -110,12 +110,11 @@ export function hora(e: any) {
 
 export const H = ['id', 'dia', 'ini', 'fim', 'titulo', 'local', 'org', 'resp', 'on', 'rec', 'disp'];
 export function table(es: any[]) {
-  st().last = es.map(e => e.id);
   const M: Map<string, any> = (cx().c.ev ??= new Map());
   return tsv(H, es.map(e => {
     M.set(e.id, e);
     const a = String(e.start?.dateTime ?? ''), b = String(e.end?.dateTime ?? '');
-    return [put(e.id), dia(a), e.isAllDay ? 'dia todo' : a.slice(11, 16), e.isAllDay ? (min(a, b) > 1440 ? dia(dias(b, -1)) : '-') : b.slice(11, 16),
+    return [e.id, dia(a), e.isAllDay ? 'dia todo' : a.slice(11, 16), e.isAllDay ? (min(a, b) > 1440 ? dia(dias(b, -1)) : '-') : b.slice(11, 16),
       cell(`${e.isCancelled ? '[cancelado] ' : ''}${e.subject ?? ''}`, 60), cell(loc(e), 30), e.isOrganizer ? 'eu' : cell(nm(e.organizer), 20), resp(e), e.isOnlineMeeting ? 1 : 0, e.type === 'occurrence' || e.type === 'exception' ? 1 : 0, disp(e)];
   }));
 }
@@ -168,7 +167,7 @@ export function recTxt(r: any) {
 
 // ---- schemas
 export const str = (description: string, x: Partial<S> = {}): S => ({ type: 'string', description, ...x });
-export const ALVO = str("evento: id curto ('3'), 'atual' (último lido/criado) ou 'ultimo' (1º da última listagem)");
+export const ALVO = str('id do evento (coluna id de ls/find)');
 export const obj = (properties: Record<string, S>, required: string[] = []): S => ({ type: 'object', properties, required });
 export const RO = { readOnlyHint: true, openWorldHint: false };
 export const LISTA_EMAILS: S = { type: 'array', items: { type: 'string' }, description: 'emails' };

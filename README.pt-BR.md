@@ -5,7 +5,8 @@ Funciona com conta corporativa (Microsoft 365) e pessoal (Outlook.com, Hotmail).
 
 - **Zero dependências.** Node 22.18+ roda o TypeScript direto: sem `npm install`, sem build.
 - **Roda com você.** Na sua máquina, com o seu app do Azure. Nenhum servidor de terceiros vê sua agenda.
-- **Econômico em tokens.** Saída tabular e ids curtos de evento (`3`, `atual`, `ultimo`).
+- **Econômico em tokens.** Saída tabular.
+- **IDs permanentes.** Cada evento vem com o id real do Microsoft Graph, pedido como *id imutável*, então pode ser guardado num banco e usado depois.
 - **Sempre no seu fuso.** Os horários são lidos e gravados no fuso da sua caixa; toda listagem mostra a data e a hora de agora, para a IA não chutar o que é "amanhã".
 - **Seguro por padrão.** Tudo que avisa outras pessoas (convites, alterações, cancelamentos, respostas) mostra um preview e espera a aprovação do usuário. Evento só na sua agenda não pergunta.
 - **Login ao conectar.** Na primeira conexão, o navegador abre na escolha de conta Microsoft.
@@ -100,7 +101,7 @@ No macOS, deixe a pasta fora de `Downloads`/`Mesa`/`Documentos` (ex.: `~/outlook
 | `rsp` | responde a um convite: aceitar, recusar ou talvez, com comentário. **Pede confirmação quando o organizador é avisado** |
 | `cx` | conta, fuso, horário de trabalho e calendários; `trocar` conta |
 
-IDs: `3` (id curto da última listagem), `atual` (último lido/criado), `ultimo` (1º da última listagem).
+IDs: a coluna `id` de `ls`/`find` (e o id devolvido por `cr`) é o id permanente do evento no Graph (id imutável). Passe esse id em `alvo` nas outras ferramentas, agora ou numa sessão futura.
 Eventos recorrentes: `ed`, `rm` e `rsp` agem numa ocorrência; passe `serie: true` para a série inteira.
 Datas no formato `AAAA-MM-DDTHH:mm` no seu fuso; só `AAAA-MM-DD` = dia inteiro.
 
@@ -157,9 +158,9 @@ src/
   mcp.ts      protocolo MCP: JSON-RPC, validação de schema, confirmação (elicitation ou código cf)
   http.ts     modo remoto: Streamable HTTP + servidor OAuth que repassa o login à Microsoft
   auth.ts     login Microsoft: navegador (PKCE), device code, refresh, token em arquivo
-  ctx.ts      estado por usuário (token, ids curtos, caches)
-  g.ts        cliente Graph mínimo: get/post/patch/delete, retry em 429/401
-  ids.ts      id curto <-> id Graph, 'atual', 'ultimo'
+  ctx.ts      estado por usuário (token, caches)
+  g.ts        cliente Graph mínimo: get/post/patch/delete, retry em 429/401, ids imutáveis
+  ids.ts      valida os ids de evento recebidos pelas ferramentas
   fmt.ts      saída tabular, limpeza de texto
   lib.ts      fuso e contas de data, períodos, tabela de eventos, recorrência, helpers
   tools/      uma ferramenta por arquivo + index.ts (ev.ts: campos do evento usados por criar e alterar)
@@ -171,7 +172,7 @@ test/
 ## Desenvolvimento
 
 ```bash
-node test/run.ts   # 64 checagens, sem rede nem conta Microsoft
+node test/run.ts   # 66 checagens, sem rede nem conta Microsoft
 npx tsc -p .       # checagem de tipos (opcional)
 ```
 

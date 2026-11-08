@@ -52,7 +52,8 @@ const linhas = r.t.split('\n');
 const daily = linhas.find(l => l.includes('Daily'))!.split('|'), acme = linhas.find(l => l.includes('ACME'))!.split('|');
 ok(daily[2] === '10:00' && daily[3] === '10:15' && daily[6] === 'eu' && daily[7] === 'org' && daily[8] === '1' && daily[9] === '1', 'ls: daily recorrente, online, organizada por mim', daily.join('|'));
 ok(acme[5] === 'Sala 3' && acme[6] === 'Ana Lima' && acme[7] === '?' && acme[10] === 'prov', 'ls: convite da Ana sem resposta', acme.join('|'));
-ok(!r.t.includes('AAMk'), 'ls: sem ids longos do Graph');
+ok(daily[0].startsWith('AAMk') && acme[0].startsWith('AAMk'), 'ls: coluna id traz o id real do Graph');
+ok(calls.filter(c => c.p.startsWith('/v1.0/me')).every(c => c.prefer?.includes('IdType="ImmutableId"')), 'toda chamada pede id imutável ao Graph');
 console.log(r.t);
 const ID: Record<string, string> = { daily: daily[0], acme: acme[0] };
 
@@ -84,7 +85,7 @@ ok(r.t.includes('conta corporativa') && r.t.includes('|08:00|09:00|60') && r.t.i
 // ---- criar
 r = await A.call('cr', { titulo: 'Foco', inicio: `${dia(1)}T09:15`, duracao: 60 });
 const cr1 = lastCall(c => c.m === 'POST' && c.p.endsWith('/events'));
-ok(/^criado:\d+\|/.test(r.t) && r.t.includes('09:15–10:15') && r.t.includes('conflito:') && r.t.includes('Dentista') && !r.t.includes('CONFIRMAÇÃO'), 'cr sem participantes: sem confirmação, avisa conflito com o dentista', r.t);
+ok(/^criado:AAMk\S+\|/.test(r.t) && r.t.includes('09:15–10:15') && r.t.includes('conflito:') && r.t.includes('Dentista') && !r.t.includes('CONFIRMAÇÃO'), 'cr sem participantes: sem confirmação, avisa conflito com o dentista', r.t);
 ok(!!cr1 && cr1.b.start.dateTime === `${dia(1)}T09:15:00` && cr1.b.start.timeZone === 'E. South America Standard Time' && cr1.b.end.dateTime === `${dia(1)}T10:15:00` && cr1.b.attendees.length === 0, 'cr: horário no fuso do usuário', JSON.stringify(cr1?.b));
 const nPost = calls.filter(c => c.m === 'POST' && c.p.endsWith('/events')).length;
 r = await A.call('cr', { titulo: 'Kickoff', inicio: `${dia(2)} 15:00`, fim: `${dia(2)} 16:30`, participantes: ['ana@acme.com'], opcionais: ['bob@acme.com'], online: true, local: 'Sala 1' });
@@ -156,8 +157,8 @@ r = await A.call('ls', { periodo: 'xyz' });
 ok(r.e && r.t.includes('hoje|amanha'), 'enum inválido rejeitado', r.t);
 r = await A.call('rd', {});
 ok(r.e && r.t.includes('alvo: obrigatório'), 'required', r.t);
-r = await A.call('rd', { alvo: '999' });
-ok(r.e && r.t.includes('desconhecido'), 'id curto desconhecido', r.t);
+r = await A.call('rd', { alvo: 'naoexiste' });
+ok(r.e && r.t.includes('404'), 'id inexistente: erro do Graph', r.t);
 r = await A.call('ls', { calendario: 'inexistente' });
 ok(r.e && r.t.includes('calendário desconhecido'), 'calendário desconhecido', r.t);
 const nAuth = calls.filter(c => c.p.includes('/authorize')).length;
@@ -165,8 +166,8 @@ r = await A.call('cx', { acao: 'trocar' });
 ok(r.t.includes('abri o navegador'), 'cx trocar: abre escolha de conta de novo', r.t);
 await sleep(400);
 ok(calls.filter(c => c.p.includes('/authorize')).length === nAuth + 1, 'cx trocar: novo login feito');
-r = await A.call('rd', { alvo: '1' });
-ok(r.e && r.t.includes('desconhecido'), 'cx trocar: ids da conta anterior zerados', r.t);
+r = await A.call('rd', { alvo: ID.dent });
+ok(!r.e && r.t.includes(`id:${ID.dent}`), 'o id continua valendo depois de trocar de sessão', r.t);
 A.p.kill();
 
 // login por código de dispositivo (servidor sem navegador)
@@ -184,6 +185,8 @@ let asked = 0;
 const B = client(() => (++asked === 1 ? { action: 'accept', content: { confirmar: true } } : { action: 'decline' }));
 await B.rq('initialize', { protocolVersion: '2025-06-18', capabilities: { elicitation: {} }, clientInfo: { name: 't', version: '0' } });
 await sleep(400);
+r = await B.call('rd', { alvo: ID.dent });
+ok(!r.e && r.t.includes('Dentista'), 'id salvo funciona em outro processo, sem listar antes', r.t);
 const n0 = evs.length;
 r = await B.call('cr', { titulo: 'Com Ana', inicio: `${dia(4)}T10:00`, participantes: ['ana@acme.com'] });
 ok(r.t.includes('criado:') && asked === 1 && evs.length === n0 + 1, 'elicitation aceita -> cria e convida', r.t);

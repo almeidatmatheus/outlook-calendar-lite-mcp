@@ -5,7 +5,8 @@ Works with work/school accounts (Microsoft 365) and personal accounts (Outlook.c
 
 - **Zero dependencies.** Node 22.18+ runs the TypeScript directly: no `npm install`, no build.
 - **You run it, you own it.** It runs on your machine with your own Azure app. No third-party server sees your calendar.
-- **Token-light.** Tabular output and short event ids (`3`, `atual`, `ultimo`).
+- **Token-light.** Tabular output.
+- **Permanent ids.** Every event comes with its real Microsoft Graph id, requested as an *immutable id*, so you can store it in a database and use it later.
 - **Your time zone, always.** Times are read and written in the mailbox's time zone; every listing shows today's date and the current time, so the AI never guesses "tomorrow".
 - **Safe by default.** Anything that notifies other people (invitations, updates, cancellations, replies) shows a preview and waits for the user's approval. Events only on your own calendar don't ask.
 - **Login on connect.** The first time the client connects, your browser opens on the Microsoft account picker.
@@ -102,7 +103,7 @@ On macOS, keep the folder outside `Downloads`/`Desktop`/`Documents` (e.g. `~/out
 | `rsp` | reply to an invitation: accept, decline or tentative, with a comment. **Asks for confirmation when the organizer is notified** |
 | `cx` | account, time zone, working hours and calendars; `trocar` switches account |
 
-Event ids: `3` (short id from the last listing), `atual` (last read/created), `ultimo` (first of the last listing).
+Event ids: the `id` column of `ls`/`find` (and the id returned by `cr`) is the event's permanent Graph id (immutable id). Pass it as `alvo` to the other tools, now or in a later session.
 Recurring events: `ed`, `rm` and `rsp` act on one occurrence; pass `serie: true` for the whole series.
 Dates are written as `YYYY-MM-DDTHH:mm` in your time zone; `YYYY-MM-DD` alone means all day.
 
@@ -159,9 +160,9 @@ src/
   mcp.ts      MCP protocol: JSON-RPC, schema validation, confirmation (elicitation or cf code)
   http.ts     remote mode: Streamable HTTP + OAuth server that delegates login to Microsoft
   auth.ts     Microsoft login: browser (PKCE), device code, refresh, token file
-  ctx.ts      per-user state (token, short ids, caches)
-  g.ts        minimal Graph client: get/post/patch/delete, retry on 429/401
-  ids.ts      short id <-> Graph id, 'atual', 'ultimo'
+  ctx.ts      per-user state (token, caches)
+  g.ts        minimal Graph client: get/post/patch/delete, retry on 429/401, immutable ids
+  ids.ts      validates the event ids received by the tools
   fmt.ts      tabular output, text cleanup
   lib.ts      time zone and date math, periods, events table, recurrence, shared helpers
   tools/      one file per tool + index.ts (ev.ts: event fields shared by create and update)
@@ -173,7 +174,7 @@ test/
 ## Development
 
 ```bash
-node test/run.ts   # 64 checks, no network or Microsoft account needed
+node test/run.ts   # 66 checks, no network or Microsoft account needed
 npx tsc -p .       # type check (optional)
 ```
 
