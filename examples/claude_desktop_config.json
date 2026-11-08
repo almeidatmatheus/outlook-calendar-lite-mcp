@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "calendar": {
+      "command": "node",
+      "args": ["/absolute/path/to/outlook-calendar-lite-mcp/src/main.ts"],
+      "env": {
+        "OUTLOOK_MCP_CLIENT_ID": "<your client id>"
+      }
+    }
+  }
+}

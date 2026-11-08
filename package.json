@@ -1,0 +1,33 @@
+{
+  "name": "outlook-calendar-lite-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lightweight MCP server for Microsoft Outlook Calendar (Graph). Zero dependencies, runs locally with your own Azure app.",
+  "type": "module",
+  "bin": {
+    "outlook-calendar-lite-mcp": "src/main.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "login": "node src/main.ts login",
+    "check": "tsc -p .",
+    "test": "node test/run.ts"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "outlook",
+    "calendar",
+    "microsoft-graph",
+    "claude"
+  ],
+  "author": "Matheus Almeida",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almeidatmatheus/outlook-calendar-lite-mcp.git"
+  }
+}

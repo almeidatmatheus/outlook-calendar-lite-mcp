@@ -1,0 +1,5 @@
+node_modules/
+.env
+.outlook-calendar-lite-mcp/
+*.log
+.DS_Store
