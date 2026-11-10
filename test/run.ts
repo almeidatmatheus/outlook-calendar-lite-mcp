@@ -226,6 +226,11 @@ ok(r.e && r.t.includes('não respondeu à validação') && !r.t.includes(SEG), '
 r = await NF.call('ls', { periodo: 'hoje' });
 ok(!r.e, 'ferramentas existentes seguem iguais com notificações configuradas');
 NF.p.kill();
+const NE = client(undefined, { OUTLOOK_MCP_NOTIFY_URL: 'https://expira-ruim.exemplo/notify', OUTLOOK_MCP_NOTIFY_SECRET: SEG });
+await NE.rq('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
+r = await NE.call('ntf', { acao: 'ligar' });
+ok(r.e && r.t.includes('graph 400') && r.t.includes('expiration') && !r.t.includes('não respondeu à validação'), 'ntf: outro erro 400 do Graph não vira a mensagem de validação da URL', r.t);
+NE.p.kill();
 const NH = client(undefined, { OUTLOOK_MCP_NOTIFY_URL: 'http://app.exemplo/notify', OUTLOOK_MCP_NOTIFY_SECRET: SEG });
 await NH.rq('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
 r = await NH.call('ntf', { acao: 'ligar' });

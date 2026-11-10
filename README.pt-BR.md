@@ -140,6 +140,7 @@ O MCP só cria e mantém a assinatura no Microsoft Graph; quem recebe as notific
 - O seu app deve conferir se o `clientState` é igual ao segredo antes de confiar numa notificação.
 - A URL e o segredo vêm só do ambiente, nunca de parâmetros da ferramenta, para que um modelo não consiga mandar as notificações para outro lugar. O segredo nunca aparece na saída. A `ntf` não pede confirmação: ninguém mais é avisado.
 - Não precisa de permissão nova: `Calendars.ReadWrite` basta.
+- A URL e o segredo são do servidor, não da conta: no modo remoto com várias contas, a assinatura de cada conta aponta para a mesma URL. O seu app consegue separar pelo `resource` de cada notificação.
 
 ## Modo remoto (opcional, hospedado por você)
 
@@ -188,7 +189,7 @@ test/
 ## Desenvolvimento
 
 ```bash
-node test/run.ts   # 87 checagens, sem rede nem conta Microsoft
+node test/run.ts   # 88 checagens, sem rede nem conta Microsoft
 npx tsc -p .       # checagem de tipos (opcional)
 ```
 

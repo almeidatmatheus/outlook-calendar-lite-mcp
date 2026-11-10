@@ -142,6 +142,7 @@ The MCP only creates and keeps the Microsoft Graph subscription; your app receiv
 - Your app should check that `clientState` equals the secret before trusting a notification.
 - The URL and secret come only from the environment, never from tool arguments, so a model can't point notifications elsewhere. The secret never appears in tool output. `ntf` doesn't ask for confirmation: nobody else is notified.
 - No new permission: `Calendars.ReadWrite` is enough.
+- The URL and secret belong to the server, not to an account: in remote mode with several accounts, each account's subscription points to the same URL. Your app can tell them apart by the `resource` in each notification.
 
 ## Remote mode (optional, self-hosted)
 
@@ -190,7 +191,7 @@ test/
 ## Development
 
 ```bash
-node test/run.ts   # 87 checks, no network or Microsoft account needed
+node test/run.ts   # 88 checks, no network or Microsoft account needed
 npx tsc -p .       # type check (optional)
 ```
 

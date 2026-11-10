@@ -53,7 +53,8 @@ const t: Tool = {
       let r = s ? await g('PATCH', `/subscriptions/${s.id}`, { expirationDateTime: exp }).catch(e => { if (/^graph 404/.test(e.message)) return null; throw e; }) : null;
       if (!r) {
         r = await g('POST', '/subscriptions', { changeType: 'updated,deleted', resource: c.resource, notificationUrl: url, lifecycleNotificationUrl: url, clientState: seg, expirationDateTime: exp })
-          .catch(e => { throw /^graph 400/.test(e.message) && /valida/i.test(e.message) ? new Error('a URL de notificação não respondeu à validação do Microsoft Graph em 10 s (o app está no ar e devolve o validationToken?)') : e; });
+          // só a falha da chamada de validação à URL; outros 400 (ex.: expiração inválida) seguem o erro do g()
+          .catch(e => { throw /^graph 400/.test(e.message) && /validation request|notification endpoint/i.test(e.message) ? new Error('a URL de notificação não respondeu à validação do Microsoft Graph em 10 s (o app está no ar e devolve o validationToken?)') : e; });
       }
       return `ligado:${r.id}|expira:${iso(Date.parse(r.expirationDateTime ?? exp))}`;
     } catch (e: any) {

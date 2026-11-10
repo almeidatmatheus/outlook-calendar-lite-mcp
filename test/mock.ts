@@ -40,6 +40,7 @@ function graph(m: string, url: URL, b: any): [number, any] {
   if (m === 'GET' && (x = p.match(/^\/me\/calendars\/([^/]+)$/))) return [200, { id: x[1], name: x[1] === 'cal2' ? 'Pessoal' : 'Calendário' }];
   if (m === 'GET' && p === '/subscriptions') return [200, { value: subs.map(y => ({ ...y, clientState: null })) }];
   if (m === 'POST' && p === '/subscriptions') {
+    if (String(b.notificationUrl).includes('expira-ruim')) return [400, { error: { code: 'InvalidRequest', message: 'Subscription expiration can only be 10070 minutes in the future. Expiration date time validation failed.' } }];
     if (String(b.notificationUrl).includes('fora-do-ar')) return [400, { error: { code: 'ValidationError', message: 'Subscription validation request failed. Notification endpoint must respond with 200 OK to validation request.' } }];
     const y = { ...b, id: 'sub-' + ++n, expirationDateTime: b.expirationDateTime.replace('Z', '.0000000Z') };
     subs.push(y);
