@@ -3,6 +3,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 type M = Record<string, any>;
 export const calls: { m: string; p: string; b?: any; prefer?: string }[] = [];
+export const subs: M[] = []; // assinaturas de notificação recebidas
+export const ctl = { patch404: false }; // força o PATCH a falhar como assinatura vencida
 const TZ = 'E. South America Standard Time', OFF = -3; // a caixa informa o fuso no formato do Windows // São Paulo não tem horário de verão
 let n = 0, tokTries = 0, throttle = 1;
 const nid = () => 'AAMkAGI2EV' + 'x'.repeat(120) + ++n;
@@ -34,6 +36,21 @@ function graph(m: string, url: URL, b: any): [number, any] {
   if (m === 'GET' && p === '/me/mailboxSettings') return [200, { timeZone: TZ, workingHours: { daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], startTime: '09:00:00.0000000', endTime: '18:00:00.0000000', timeZone: { name: TZ } } }];
   if (m === 'GET' && p === "/me/outlook/supportedTimeZones(TimeZoneStandard=microsoft.graph.timeZoneStandard'Iana')") return [200, { value: [{ alias: 'America/New_York', displayName: '(UTC-05:00) Eastern Time (US & Canada)' }, { alias: 'America/Sao_Paulo', displayName: '(UTC-03:00) Brasilia' }] }];
   if (m === 'GET' && p === '/me/outlook/supportedTimeZones') return [200, { value: [{ alias: 'Eastern Standard Time', displayName: '(UTC-05:00) Eastern Time (US & Canada)' }, { alias: 'E. South America Standard Time', displayName: '(UTC-03:00) Brasilia' }] }];
+  if (m === 'GET' && p === '/me/calendar') return [200, { id: 'cal1', name: 'Calendário' }];
+  if (m === 'GET' && (x = p.match(/^\/me\/calendars\/([^/]+)$/))) return [200, { id: x[1], name: x[1] === 'cal2' ? 'Pessoal' : 'Calendário' }];
+  if (m === 'GET' && p === '/subscriptions') return [200, { value: subs.map(y => ({ ...y, clientState: null })) }];
+  if (m === 'POST' && p === '/subscriptions') {
+    if (String(b.notificationUrl).includes('fora-do-ar')) return [400, { error: { code: 'ValidationError', message: 'Subscription validation request failed. Notification endpoint must respond with 200 OK to validation request.' } }];
+    const y = { ...b, id: 'sub-' + ++n, expirationDateTime: b.expirationDateTime.replace('Z', '.0000000Z') };
+    subs.push(y);
+    return [201, { ...y, clientState: null }];
+  }
+  if ((x = p.match(/^\/subscriptions\/([^/]+)$/))) {
+    const y = subs.find(z => z.id === x![1]);
+    if (!y || (m === 'PATCH' && ctl.patch404)) return [404, { error: { code: 'ResourceNotFound', message: 'subscription not found' } }];
+    if (m === 'PATCH') { y.expirationDateTime = b.expirationDateTime; return [200, { ...y, clientState: null }]; }
+    if (m === 'DELETE') { subs.splice(subs.indexOf(y), 1); return [204, null]; }
+  }
   if (m === 'GET' && p === '/me/calendars') return [200, { value: [{ id: 'cal1', name: 'Calendário', canEdit: true, isDefaultCalendar: true, owner: { address: 'eu@minha.com' } }, { id: 'cal2', name: 'Pessoal', canEdit: true, isDefaultCalendar: false, owner: { address: 'eu@minha.com' } }] }];
   if (m === 'GET' && /^\/me(\/calendar|\/calendars\/[^/]+)?\/calendarView$/.test(p)) {
     if (throttle-- > 0) return [429, { error: { code: 'TooManyRequests', message: 'slow' } }];

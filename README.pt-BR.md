@@ -100,6 +100,7 @@ No macOS, deixe a pasta fora de `Downloads`/`Mesa`/`Documentos` (ex.: `~/outlook
 | `rm` | cancela (participantes recebem o cancelamento, com mensagem opcional) ou tira da sua agenda. **Pede confirmação** |
 | `rsp` | responde a um convite: aceitar, recusar ou talvez, com comentário. **Pede confirmação quando o organizador é avisado** |
 | `cx` | conta, fuso, horário de trabalho e calendários; `trocar` conta |
+| `ntf` | notificações de mudança para o seu app: `info` mostra a assinatura, `ligar` cria ou renova, `desligar` remove (veja abaixo) |
 
 IDs: a coluna `id` de `ls`/`find` (e o id devolvido por `cr`) é o id permanente do evento no Graph (id imutável). Passe esse id em `alvo` nas outras ferramentas, agora ou numa sessão futura.
 Eventos recorrentes: `ed`, `rm` e `rsp` agem numa ocorrência; passe `serie: true` para a série inteira.
@@ -121,9 +122,24 @@ O cliente deve mostrar o preview e só mandar o `cf` depois da aprovação expl�
 | `OUTLOOK_MCP_LOGIN` | navegador; `device` = código de dispositivo (SSH, sem navegador) |
 | `OUTLOOK_MCP_TZ` | o fuso da sua caixa; defina um nome IANA (ex.: `America/Sao_Paulo`) para forçar as contas de data |
 | `OUTLOOK_MCP_HOME` | `~/.outlook-calendar-lite-mcp` |
+| `OUTLOOK_MCP_NOTIFY_URL` | notificações de mudança: URL HTTPS pública do seu app que as recebe (sem ela, a `ntf` fica desligada) |
+| `OUTLOOK_MCP_NOTIFY_SECRET` | notificações de mudança: segredo enviado como `clientState` (máx. 128 caracteres) |
 
 Terminal: `node src/main.ts login | whoami | logout`.
 Atrás de proxy corporativo: Node 22.21+ com `NODE_USE_ENV_PROXY=1` e `HTTPS_PROXY`.
+
+## Notificações de mudança (opcional)
+
+Para que outro app seu seja avisado quando eventos mudam, defina `OUTLOOK_MCP_NOTIFY_URL` e `OUTLOOK_MCP_NOTIFY_SECRET`.
+O MCP só cria e mantém a assinatura no Microsoft Graph; quem recebe as notificações é o seu app, nessa URL.
+
+- `ntf acao=ligar` (opcional `calendario`, `dias` de 1 a 3, padrão 2) cria a assinatura ou renova. É idempotente, então o seu app pode chamar de tempos em tempos, antes de vencer. Devolve `ligado:<id>|expira:<ISO UTC>`.
+- `ntf` (`acao=info`) devolve `assinatura:<id>|expira:<ISO UTC>|calendario:<nome>` ou `sem assinatura`. `ntf acao=desligar` devolve `desligado`.
+- A assinatura é criada com id imutável, então as notificações trazem o mesmo id permanente de evento que `ls` e `cr` devolvem.
+- Na criação, o Microsoft Graph chama a URL com um `validationToken` e espera recebê-lo de volta em texto puro em até 10 segundos; se falhar, a `ntf` avisa que a URL não respondeu à validação.
+- O seu app deve conferir se o `clientState` é igual ao segredo antes de confiar numa notificação.
+- A URL e o segredo vêm só do ambiente, nunca de parâmetros da ferramenta, para que um modelo não consiga mandar as notificações para outro lugar. O segredo nunca aparece na saída. A `ntf` não pede confirmação: ninguém mais é avisado.
+- Não precisa de permissão nova: `Calendars.ReadWrite` basta.
 
 ## Modo remoto (opcional, hospedado por você)
 
@@ -172,7 +188,7 @@ test/
 ## Desenvolvimento
 
 ```bash
-node test/run.ts   # 66 checagens, sem rede nem conta Microsoft
+node test/run.ts   # 87 checagens, sem rede nem conta Microsoft
 npx tsc -p .       # checagem de tipos (opcional)
 ```
 

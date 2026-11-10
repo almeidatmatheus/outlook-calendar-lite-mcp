@@ -102,6 +102,7 @@ On macOS, keep the folder outside `Downloads`/`Desktop`/`Documents` (e.g. `~/out
 | `rm` | cancel (attendees get the cancellation, with an optional message) or remove from your calendar. **Asks for confirmation** |
 | `rsp` | reply to an invitation: accept, decline or tentative, with a comment. **Asks for confirmation when the organizer is notified** |
 | `cx` | account, time zone, working hours and calendars; `trocar` switches account |
+| `ntf` | change notifications for your app: `info` shows the subscription, `ligar` creates or renews it, `desligar` removes it (see below) |
 
 Event ids: the `id` column of `ls`/`find` (and the id returned by `cr`) is the event's permanent Graph id (immutable id). Pass it as `alvo` to the other tools, now or in a later session.
 Recurring events: `ed`, `rm` and `rsp` act on one occurrence; pass `serie: true` for the whole series.
@@ -123,9 +124,24 @@ Clients should show the preview to the user and send `cf` only after explicit ap
 | `OUTLOOK_MCP_LOGIN` | browser; `device` = device code (SSH, no browser) |
 | `OUTLOOK_MCP_TZ` | the mailbox's time zone; set an IANA name (e.g. `America/Sao_Paulo`) to override date math |
 | `OUTLOOK_MCP_HOME` | `~/.outlook-calendar-lite-mcp` |
+| `OUTLOOK_MCP_NOTIFY_URL` | change notifications: public HTTPS URL of your app that receives them (unset = `ntf` is off) |
+| `OUTLOOK_MCP_NOTIFY_SECRET` | change notifications: secret sent as `clientState` (max. 128 characters) |
 
 Command line: `node src/main.ts login | whoami | logout`.
 Behind a corporate proxy: Node 22.21+ with `NODE_USE_ENV_PROXY=1` and `HTTPS_PROXY`.
+
+## Change notifications (optional)
+
+To have another app of yours told when events change, set `OUTLOOK_MCP_NOTIFY_URL` and `OUTLOOK_MCP_NOTIFY_SECRET`.
+The MCP only creates and keeps the Microsoft Graph subscription; your app receives the notifications at that URL.
+
+- `ntf acao=ligar` (optionally `calendario`, `dias` 1–3, default 2) creates the subscription or renews it. It's idempotent, so your app can call it on a schedule, before it expires. Returns `ligado:<id>|expira:<ISO UTC>`.
+- `ntf` (`acao=info`) returns `assinatura:<id>|expira:<ISO UTC>|calendario:<name>` or `sem assinatura`. `ntf acao=desligar` returns `desligado`.
+- Subscriptions are created with the immutable id, so notifications carry the same permanent event id that `ls` and `cr` return.
+- On creation, Microsoft Graph calls the URL with a `validationToken` and expects it back as plain text within 10 seconds; if that fails, `ntf` says the URL didn't answer the validation.
+- Your app should check that `clientState` equals the secret before trusting a notification.
+- The URL and secret come only from the environment, never from tool arguments, so a model can't point notifications elsewhere. The secret never appears in tool output. `ntf` doesn't ask for confirmation: nobody else is notified.
+- No new permission: `Calendars.ReadWrite` is enough.
 
 ## Remote mode (optional, self-hosted)
 
@@ -174,7 +190,7 @@ test/
 ## Development
 
 ```bash
-node test/run.ts   # 66 checks, no network or Microsoft account needed
+node test/run.ts   # 87 checks, no network or Microsoft account needed
 npx tsc -p .       # type check (optional)
 ```
 
